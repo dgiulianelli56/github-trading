@@ -1,0 +1,42 @@
+[
+  {
+    "ticker": "AAPL",
+    "weight_pct": 28.0
+  },
+  {
+    "ticker": "AXP",
+    "weight_pct": 16.0
+  },
+  {
+    "ticker": "KO",
+    "weight_pct": 12.0
+  },
+  {
+    "ticker": "BAC",
+    "weight_pct": 10.0
+  },
+  {
+    "ticker": "CVX",
+    "weight_pct": 6.0
+  },
+  {
+    "ticker": "OXY",
+    "weight_pct": 5.5
+  },
+  {
+    "ticker": "MCO",
+    "weight_pct": 4.5
+  },
+  {
+    "ticker": "DVA",
+    "weight_pct": 2.5
+  },
+  {
+    "ticker": "KHC",
+    "weight_pct": 2.0
+  },
+  {
+    "ticker": "VZ",
+    "weight_pct": 1.5
+  }
+]
