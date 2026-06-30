@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pandas as pd
 from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.enums import DataFeed
 from alpaca.data.requests import StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
 from alpaca.trading.client import TradingClient
@@ -163,6 +164,7 @@ class TrailingStop:
             timeframe=TimeFrame.Day,
             start=start,
             end=end,
+            feed=DataFeed.IEX,
         )
         bars = self.data.get_stock_bars(req)
         closes: pd.Series = bars[ticker].df["close"]

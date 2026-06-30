@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.enums import DataFeed
 from alpaca.data.requests import StockLatestQuoteRequest
 from alpaca.trading.client import TradingClient
 from alpaca.trading.enums import OrderSide, QueryOrderStatus, TimeInForce
@@ -53,7 +54,7 @@ class LadderBuy:
         return float(self.trading.get_account().cash)
 
     def _ask_price(self, ticker: str) -> float:
-        req = StockLatestQuoteRequest(symbol_or_symbols=ticker)
+        req = StockLatestQuoteRequest(symbol_or_symbols=ticker, feed=DataFeed.IEX)
         quote = self.data.get_stock_latest_quote(req)
         return float(quote[ticker].ask_price)
 
