@@ -167,7 +167,8 @@ class TrailingStop:
             feed=DataFeed.IEX,
         )
         bars = self.data.get_stock_bars(req)
-        closes: pd.Series = bars[ticker].df["close"]
+        bar_list = bars[ticker]  # List[Bar], .df lives on BarSet not on the list
+        closes = pd.Series([b.close for b in bar_list])
 
         if len(closes) < MA_PERIOD:
             raise ValueError(f"Insufficient bars for MA({MA_PERIOD}): only {len(closes)} available")
