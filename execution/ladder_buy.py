@@ -238,16 +238,26 @@ class LadderBuy:
         if ticker not in self._state or self._state[ticker]["status"] != "ACTIVE":
             return
         entry = self._state[ticker]
+        cancelled: list[tuple[float, int]] = []
         for rung in entry["rungs"]:
             if rung["status"] == "PENDING":
                 try:
                     self.trading.cancel_order_by_id(rung["order_id"])
                     rung["status"] = "CANCELLED"
+                    cancelled.append((rung["target_price"], rung["qty"]))
                 except Exception as exc:
                     logger.error(f"Cancel rung {rung['rung_index']} failed: {exc}")
+        filled_qty = sum(r["fill_qty"] for r in entry["rungs"] if r["status"] == "FILLED" and r["fill_qty"])
         entry["status"] = "PARTIAL_TIMEOUT"
         self._save()
         logger.info(f"[{self.account.name}] {ticker} ladder cancelled ({reason})")
+        if cancelled:
+            notifier.ladder_cancelled(
+                account_name=self.account.name,
+                ticker=ticker,
+                cancelled_rungs=cancelled,
+                filled_qty=filled_qty,
+            )
 
     # ── Internal helpers ───────────────────────────────────────────────────────
 

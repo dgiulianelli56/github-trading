@@ -99,6 +99,25 @@ def hard_stop_triggered(
     )
 
 
+def ladder_cancelled(
+    account_name: str,
+    ticker: str,
+    cancelled_rungs: list[tuple[float, int]],
+    filled_qty: float,
+) -> None:
+    rows = "\n".join(
+        f"{ticker:<5} Limit @ ${price:>7,.2f}  CANCEL  {qty:>4}"
+        for price, qty in cancelled_rungs
+    )
+    held_line = f"You hold {filled_qty:g} filled shares — MA trailing stop is monitoring.\n" if filled_qty > 0 else "No shares were filled.\n"
+    _send(
+        f"🟡 <b>[{account_name}] {ticker} — UNFILLED ORDERS CANCELLED (3:45 PM)</b>\n\n"
+        f"<pre>{rows}</pre>\n\n"
+        f"{held_line}"
+        f"⚡ Cancel these same orders in Fidelity {account_name}"
+    )
+
+
 def wash_sale_warning(account_name: str, ticker: str, days_since_loss: int) -> None:
     ira_note = (
         "\n🚫 In an IRA this loss is <b>PERMANENTLY disallowed</b> — not just deferred."
