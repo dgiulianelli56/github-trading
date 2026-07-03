@@ -123,14 +123,11 @@ class Engine:
                     result = agent.ladder.activate(ticker)
                     if result:
                         new_signals.append(f"{ticker} ladder activated in {agent.config.name}")
-                        rung_prices = [r["target_price"] for r in result["rungs"]]
-                        total_qty = sum(r["qty"] for r in result["rungs"])
                         notifier.new_signal(
                             account_name=agent.config.name,
                             ticker=ticker,
                             source=source,
-                            total_qty=total_qty,
-                            rung_prices=rung_prices,
+                            rungs=[(r["target_price"], r["qty"]) for r in result["rungs"]],
                             hard_stop=result["hard_stop"],
                         )
 

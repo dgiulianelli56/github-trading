@@ -117,17 +117,21 @@ def new_signal(
     account_name: str,
     ticker: str,
     source: str,
-    total_qty: int,
-    rung_prices: list[float],
+    rungs: list[tuple[float, int]],
     hard_stop: float,
 ) -> None:
-    price_range = f"${rung_prices[0]:,.2f} → ${rung_prices[-1]:,.2f}" if len(rung_prices) > 1 else f"${rung_prices[0]:,.2f}"
+    rows = "\n".join(
+        f"{ticker:<5} Limit @ ${price:>7,.2f}  BUY  {qty:>4}"
+        for price, qty in rungs
+    )
+    total_qty = sum(qty for _, qty in rungs)
     _send(
         f"📡 <b>[{account_name}] Action: BUY {ticker}</b>\n"
-        f"Source: {source}\n"
-        f"~{total_qty} shares across {len(rung_prices)} staggered limit orders ({price_range})\n"
-        f"Hard stop: ${hard_stop:,.2f}\n"
-        f"⚡ Fidelity: BUY ~{total_qty} {ticker} near market — also set stop at ${hard_stop:,.2f}"
+        f"Source: {source}\n\n"
+        f"<pre>Ticker  Order              Side   Qty\n"
+        f"{rows}</pre>\n\n"
+        f"Hard stop: ${hard_stop:,.2f} (engine monitors — also set this stop in Fidelity)\n"
+        f"⚡ Mirror all {len(rungs)} orders above in Fidelity {account_name}"
     )
 
 
