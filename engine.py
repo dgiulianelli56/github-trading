@@ -42,13 +42,15 @@ class AccountAgent:
 
 # ── Watchlist builder ───────────────────────────────────────────────────────────
 
-def build_watchlist() -> list[str]:
+def build_watchlist() -> dict[str, str]:
     """
     Merge congressional buys + Berkshire holdings into a priority-ranked watchlist.
+    Returns an ordered dict of {ticker: source_label}.
 
     Tier 1 — tickers bought by multiple politicians AND held by Berkshire (highest conviction)
     Tier 2 — tickers bought by multiple politicians (congressional cluster)
     Tier 3 — Berkshire top-10 holdings
+    Tier 4 — all other recent congressional buys
     """
     trades = congress.get_recent_trades(days_back=14)
     congress_all = congress.all_bought_tickers(trades)
@@ -56,25 +58,22 @@ def build_watchlist() -> list[str]:
     berk = berkshire.watchlist(top_n=10)
     berk_set = set(berk)
 
-    watchlist: list[str] = []
-    seen: set[str] = set()
-
-    def add(ticker: str) -> None:
-        if ticker not in seen:
-            seen.add(ticker)
-            watchlist.append(ticker)
+    watchlist: dict[str, str] = {}
 
     for t in congress_high:
-        if t in berk_set:
-            add(t)
+        if t in berk_set and t not in watchlist:
+            watchlist[t] = "Congressional + Berkshire"
     for t in congress_high:
-        add(t)
+        if t not in watchlist:
+            watchlist[t] = "Congressional"
     for t in berk:
-        add(t)
+        if t not in watchlist:
+            watchlist[t] = "Berkshire"
     for t in congress_all:
-        add(t)
+        if t not in watchlist:
+            watchlist[t] = "Congressional"
 
-    logger.info(f"Watchlist ({len(watchlist)}): {watchlist}")
+    logger.info(f"Watchlist ({len(watchlist)}): {list(watchlist.keys())}")
     if trades:
         logger.info(congress.summary(trades))
     return watchlist
@@ -98,10 +97,11 @@ class Engine:
         """
         logger.info("=== PRE-MARKET (9:15 AM) ===")
         watchlist = build_watchlist()
+        top5 = [f"{t} ({src})" for t, src in list(watchlist.items())[:5]]
         notifier.scan_heartbeat(
             "Pre-market",
             positions_monitored=sum(len(a.stop.monitored_tickers) for a in self._all_agents()),
-            new_signals=[f"{t} (watchlist candidate)" for t in watchlist[:5]],
+            new_signals=top5,
         )
 
     def run_midopen(self) -> None:
@@ -114,7 +114,7 @@ class Engine:
 
         new_signals: list[str] = []
         for agent in self._all_agents():
-            for ticker in watchlist[:5]:
+            for ticker, source in list(watchlist.items())[:5]:
                 already_active = (
                     ticker in agent.ladder._state
                     or ticker in agent.stop._state
@@ -123,11 +123,15 @@ class Engine:
                     result = agent.ladder.activate(ticker)
                     if result:
                         new_signals.append(f"{ticker} ladder activated in {agent.config.name}")
+                        rung_prices = [r["target_price"] for r in result["rungs"]]
+                        total_qty = sum(r["qty"] for r in result["rungs"])
                         notifier.new_signal(
-                            agent.config.name, ticker,
-                            source="Congressional/Berkshire watchlist",
-                            detail=f"Ladder: {result['total_rungs']} rungs, "
-                                   f"hard stop ${result['hard_stop']:.2f}",
+                            account_name=agent.config.name,
+                            ticker=ticker,
+                            source=source,
+                            total_qty=total_qty,
+                            rung_prices=rung_prices,
+                            hard_stop=result["hard_stop"],
                         )
 
             for ticker in agent.ladder.active_tickers:

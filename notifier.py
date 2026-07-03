@@ -113,12 +113,21 @@ def wash_sale_warning(account_name: str, ticker: str, days_since_loss: int) -> N
     )
 
 
-def new_signal(account_name: str, ticker: str, source: str, detail: str) -> None:
+def new_signal(
+    account_name: str,
+    ticker: str,
+    source: str,
+    total_qty: int,
+    rung_prices: list[float],
+    hard_stop: float,
+) -> None:
+    price_range = f"${rung_prices[0]:,.2f} → ${rung_prices[-1]:,.2f}" if len(rung_prices) > 1 else f"${rung_prices[0]:,.2f}"
     _send(
-        f"📡 <b>[{account_name}] New signal: {ticker}</b>\n"
+        f"📡 <b>[{account_name}] Action: BUY {ticker}</b>\n"
         f"Source: {source}\n"
-        f"{detail}\n"
-        f"Ladder buy will activate at 10:00 AM ET"
+        f"~{total_qty} shares across {len(rung_prices)} staggered limit orders ({price_range})\n"
+        f"Hard stop: ${hard_stop:,.2f}\n"
+        f"⚡ Fidelity: BUY ~{total_qty} {ticker} near market — also set stop at ${hard_stop:,.2f}"
     )
 
 
