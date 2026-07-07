@@ -97,11 +97,11 @@ class Engine:
         """
         logger.info("=== PRE-MARKET (9:15 AM) ===")
         watchlist = build_watchlist()
-        top5 = [f"{t} ({src})" for t, src in list(watchlist.items())[:5]]
+        top_signals = [f"{t} ({src})" for t, src in list(watchlist.items())[:8]]
         notifier.scan_heartbeat(
             "Pre-market",
             positions_monitored=sum(len(a.stop.monitored_tickers) for a in self._all_agents()),
-            new_signals=top5,
+            new_signals=top_signals,
         )
 
     def run_midopen(self) -> None:
@@ -114,7 +114,7 @@ class Engine:
 
         new_signals: list[str] = []
         for agent in self._all_agents():
-            for ticker, source in list(watchlist.items())[:5]:
+            for ticker, source in watchlist.items():
                 already_active = (
                     ticker in agent.ladder._state
                     or ticker in agent.stop._state

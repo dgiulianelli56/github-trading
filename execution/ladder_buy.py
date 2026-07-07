@@ -246,7 +246,13 @@ class LadderBuy:
                     rung["status"] = "CANCELLED"
                     cancelled.append((rung["target_price"], rung["qty"]))
                 except Exception as exc:
-                    logger.error(f"Cancel rung {rung['rung_index']} failed: {exc}")
+                    msg = str(exc)
+                    if "filled" in msg.lower():
+                        # Order filled between last check and now — treat as filled
+                        rung["status"] = "FILLED"
+                        logger.info(f"[{self.account.name}] {rung['rung_index']} was filled before cancel — marking filled")
+                    else:
+                        logger.error(f"Cancel rung {rung['rung_index']} failed: {exc}")
         filled_qty = sum(r["fill_qty"] for r in entry["rungs"] if r["status"] == "FILLED" and r["fill_qty"])
         entry["status"] = "PARTIAL_TIMEOUT"
         self._save()
