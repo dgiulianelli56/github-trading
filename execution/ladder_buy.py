@@ -93,7 +93,7 @@ class LadderBuy:
         # Guard: check Alpaca directly in case state files were lost (e.g. cloud stateless run)
         try:
             open_orders = self.trading.get_orders(
-                filter=GetOrdersRequest(symbol=ticker, status=QueryOrderStatus.OPEN)
+                filter=GetOrdersRequest(symbols=[ticker], status=QueryOrderStatus.OPEN)
             )
             if open_orders:
                 logger.info(f"[{self.account.name}] {ticker}: {len(open_orders)} open orders already on Alpaca — skipping activation")
