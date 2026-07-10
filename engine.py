@@ -97,11 +97,14 @@ class Engine:
         """
         logger.info("=== PRE-MARKET (9:15 AM) ===")
         watchlist = build_watchlist()
-        top_signals = [f"{t} ({src})" for t, src in list(watchlist.items())[:8]]
+        all_monitored = sorted(set(
+            t for a in self._all_agents() for t in a.stop.monitored_tickers
+        ))
         notifier.scan_heartbeat(
             "Pre-market",
-            positions_monitored=sum(len(a.stop.monitored_tickers) for a in self._all_agents()),
-            new_signals=top_signals,
+            monitored_tickers=all_monitored,
+            watchlist=[f"{t} ({src})" for t, src in watchlist.items()],
+            new_signals=[],
         )
 
     def run_midopen(self) -> None:
@@ -115,9 +118,10 @@ class Engine:
         new_signals: list[str] = []
         for agent in self._all_agents():
             for ticker, source in watchlist.items():
+                ladder_status = agent.ladder._state.get(ticker, {}).get("status")
                 already_active = (
-                    ticker in agent.ladder._state
-                    or ticker in agent.stop._state
+                    ladder_status in ("ACTIVE", "LADDER_COMPLETE", "STOPPED_OUT")
+                    or ticker in agent.stop.monitored_tickers
                 )
                 if not already_active:
                     result = agent.ladder.activate(ticker)
@@ -135,9 +139,13 @@ class Engine:
                 agent.ladder.check_fills(ticker)
             agent.sync_handoffs()
 
+        all_monitored = sorted(set(
+            t for a in self._all_agents() for t in a.stop.monitored_tickers
+        ))
         notifier.scan_heartbeat(
             "Mid-open",
-            positions_monitored=sum(len(a.stop.monitored_tickers) for a in self._all_agents()),
+            monitored_tickers=all_monitored,
+            watchlist=[f"{t} ({src})" for t, src in watchlist.items()],
             new_signals=new_signals,
         )
 

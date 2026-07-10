@@ -154,12 +154,18 @@ def new_signal(
     )
 
 
-def scan_heartbeat(run_type: str, positions_monitored: int, new_signals: list[str]) -> None:
-    if not new_signals:
-        return  # stay silent when nothing is happening
-    signals_text = "\n".join(f"  • {s}" for s in new_signals)
+def scan_heartbeat(
+    run_type: str,
+    monitored_tickers: list[str],
+    watchlist: list[str],
+    new_signals: list[str],
+) -> None:
+    mon_text = ", ".join(monitored_tickers) if monitored_tickers else "none"
+    watch_text = ", ".join(watchlist) if watchlist else "none"
+    new_text = ("\n\nNew signals this run:\n" + "\n".join(f"  • {s}" for s in new_signals)) if new_signals else ""
     _send(
-        f"📊 <b>{run_type} scan complete</b>\n"
-        f"{positions_monitored} positions monitored\n\n"
-        f"New signals:\n{signals_text}"
+        f"📊 <b>{run_type} scan</b>\n\n"
+        f"<b>Trailing stop monitoring ({len(monitored_tickers)}):</b>\n{mon_text}\n\n"
+        f"<b>Watchlist ({len(watchlist)}):</b>\n{watch_text}"
+        f"{new_text}"
     )
