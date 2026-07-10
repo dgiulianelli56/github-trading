@@ -3,3 +3,8 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
+*.swp
+.vscode/
+buy_aapl.py
+state/
+trading.log
